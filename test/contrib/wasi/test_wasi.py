@@ -3,6 +3,8 @@ from __future__ import annotations
 import shutil
 import socket
 
+import pytest
+
 from dummyserver.testcase import HypercornDummyServerTestCase, SocketDummyServerTestCase
 
 from .runner import run_python_component
