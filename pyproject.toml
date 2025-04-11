@@ -53,6 +53,9 @@ socks = [
 h2 = [
   "h2>=4,<5"
 ]
+wasi = [
+  "componentize-py==0.16.0",
+]
 
 [dependency-groups]
 dev = [

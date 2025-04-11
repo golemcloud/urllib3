@@ -84,6 +84,10 @@ jobs:
             os: ubuntu-24.04
             nox-session: emscripten(chrome)
             experimental: true
+          - python-version: "3.12"
+            os: ubuntu-24.04
+            nox-session: wasi
+            experimental: true
           - python-version: 3.14
             experimental: true
 
@@ -139,6 +143,9 @@ jobs:
           path: .nox/.cache
           # noxfile.py contains the Pyodide version used currently.
           key: pyodide-downloads-${{ hashFiles('noxfile.py') }}
+      - name: "Install wasmtime"
+        uses: jcbhmr/setup-wasmtime@v2
+        if: ${{ matrix.nox-session == 'wasi' }}
       - name: "Run tests"
         # If no explicit NOX_SESSION is set, run the default tests for the chosen Python version
         run: uvx nox -s ${NOX_SESSION:-test-$PYTHON_VERSION}
