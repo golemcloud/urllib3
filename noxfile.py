@@ -99,7 +99,6 @@ def tests_impl(
         "3.14",
         "pypy3.10",
         "pypy3.11",
-        "wasi",
     ]
 )
 def test(session: nox.Session) -> None:
@@ -297,7 +296,7 @@ def emscripten(session: nox.Session, runner: str) -> None:
 def wasi(session: nox.Session) -> None:
     """Run wasi tests."""
     session.env["UV_PROJECT_ENVIRONMENT"] = session.virtualenv.location
-    tests_impl(session, extras="wasi", pytest_extra_args=["test/contrib/wasi"])
+    tests_impl(session, extras="", pytest_extra_args=["test/contrib/wasi"])
 
 
 @nox.session(python="3.12")
