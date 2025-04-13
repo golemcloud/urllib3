@@ -38,7 +38,7 @@ def run_python_component(body: str) -> None:
         print(python_component(body))
 
         # generate wasm
-        def run_componentize_py():
+        def run_componentize_py() -> None:
             args = [
                 "componentize-py",
                 "--wit-path",
