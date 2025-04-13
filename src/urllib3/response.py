@@ -229,7 +229,9 @@ def _get_decoder(mode: str) -> ContentDecoder:
     if zlib is not None and mode == "deflate":
         return DeflateDecoder()
 
-    raise ValueError(f"No decoder available for mode {mode}")
+    raise ValueError(
+        f"No decoder available for mode {mode}"
+    )  # Defensive: _get_decoder should not be called unless at least one decoder is available
 
 
 class BytesQueueBuffer:
