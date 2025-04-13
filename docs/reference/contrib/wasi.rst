@@ -11,21 +11,24 @@ Getting started
 
 Using urllib3 in WASI works by utilizing `wasi-http <https://github.com/WebAssembly/wasi-http>`_ host functions. To begin,
 add imports for these to the world your component is going to implement:
- .. code-block:: wit
-  package unused:unused;
 
-  world demo-world {
-    import wasi:http/types@0.2.0;
-    import wasi:http/outgoing-handler@0.2.0;
+.. code-block::
 
-    export wasi:cli/run@0.2.0;
-  }
+    package unused:unused;
+
+    world demo-world {
+      import wasi:http/types@0.2.0;
+      import wasi:http/outgoing-handler@0.2.0;
+
+      export wasi:cli/run@0.2.0;
+    }
 
 To enable the WASI backend of urllib, import the contrib module and call ``enable_wasi_backend``. The parameter passed to this function
 is the snake-cased version for the world name you are implementing.
 This function should be called as early as possible in the lifecycle of your program, we recommend calling it directly in your entrypoint.
 
- .. code-block:: python
+.. code-block:: python
+
     from demo_world import exports
     from urllib3.contrib.wasi import enable_wasi_backend
     enable_wasi_backend("demo_world")
@@ -43,6 +46,5 @@ Features
 Because a number of aspects that are normally handled by the library are delegated to the host when using the WASI backend, some
 features are not supported or settings are ignored. Notable cases are:
 
-* HTTPS: Sending https requests is supported, but the entire TLS layer is handled by the host and is not customizable from the urllib3 side. Most of the parameters
-specific to https requests, including custom certificate authorities are ignored.
-* Tunneling:
+* HTTPS: Sending HTTPS requests is supported, but the entire TLS layer is handled by the host and is not customizable from the urllib3 side. Most of the parameters specific to HTTPS requests, including custom certificate authorities, are ignored.
+* Tunneling: All kinds of tunneling and proxies are not supported.
