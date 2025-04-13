@@ -5,13 +5,6 @@ from http.client import HTTPException
 from urllib3.contrib.wasi.request import WasiRequest
 
 
-class RequestError(HTTPException):
-    def __init__(self, message: str, request: WasiRequest):
-        self.request = request
-        self.message = message
-        super().__init__(self.message)
-
-
 class ResponseAlreadyTaken(HTTPException):
     def __init__(self, request: WasiRequest):
         self.request = request

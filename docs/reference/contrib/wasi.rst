@@ -48,3 +48,4 @@ features are not supported or settings are ignored. Notable cases are:
 
 * HTTPS: Sending HTTPS requests is supported, but the entire TLS layer is handled by the host and is not customizable from the urllib3 side. Most of the parameters specific to HTTPS requests, including custom certificate authorities, are ignored.
 * Tunneling: All kinds of tunneling and proxies are not supported.
+* Transfer-Encoding: Transfer encoding is handled entirely by the host and cannot be customized from the urllib3 side.
