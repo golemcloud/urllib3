@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 
 import urllib3.connection
+import urllib3.connectionpool
 
 from ...connectionpool import HTTPConnectionPool, HTTPSConnectionPool
 from .connection import WasiHTTPConnection, WasiHTTPSConnection
@@ -21,6 +22,8 @@ def enable_wasi_backend(world_name: str) -> None:
     HTTPSConnectionPool.ConnectionCls = https_cls
     urllib3.connection.HTTPConnection = http_cls  # type: ignore[misc]
     urllib3.connection.HTTPSConnection = https_cls  # type: ignore[misc]
+    urllib3.connectionpool.HTTPConnection = http_cls  # type: ignore[misc]
+    urllib3.connectionpool.HTTPSConnection = https_cls  # type: ignore[misc]
 
 
 def partialclass(cls, *args, **kwds):  # type: ignore[no-untyped-def]

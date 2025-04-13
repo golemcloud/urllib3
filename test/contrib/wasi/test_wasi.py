@@ -32,6 +32,32 @@ class TestWasi(HypercornDummyServerTestCase):
         )
         assert result.returncode == 0
 
+    def test_connection_import(self) -> None:
+        result = run_python_component(
+            f"""\
+            from urllib3.connection import HTTPConnection
+            conn = HTTPConnection("{self.host}", {self.port})
+            conn.request("GET", "/")
+            r = conn.getresponse()
+            assert r.status == 200, r.data
+            assert r.data == b"Dummy server!"
+        """
+        )
+        assert result.returncode == 0
+
+    def test_connectionpool_import(self) -> None:
+        result = run_python_component(
+            f"""\
+            from urllib3.connectionpool import HTTPConnection
+            conn = HTTPConnection("{self.host}", {self.port})
+            conn.request("GET", "/")
+            r = conn.getresponse()
+            assert r.status == 200, r.data
+            assert r.data == b"Dummy server!"
+        """
+        )
+        assert result.returncode == 0
+
     def test_specific_method(self) -> None:
         result = run_python_component(
             f"""\
@@ -81,22 +107,23 @@ class TestWasi(HypercornDummyServerTestCase):
     def test_echo_json(self) -> None:
         result = run_python_component(
             f"""\
-            from urllib3.connection import HTTPConnection
+            from urllib3.connectionpool import HTTPConnectionPool
             import json
 
             json_data = {{
                 "Bears": "like",
                 "to": {{"eat": "buns", "with": ["marmalade", "and custard"]}},
             }}
-            conn = HTTPConnection("{self.host}", {self.port})
-            conn.request(
-                "POST",
-                "/echo_json",
-                body=json.dumps(json_data).encode("utf-8")
-            )
-            response = conn.getresponse()
-            data = response.json()
-            assert data == json_data
+            with HTTPConnectionPool(
+                "{self.host}",
+                {self.port},
+            ) as http_pool:
+                r  = http_pool.request(
+                    "POST",
+                    "/echo_json",
+                    body=json.dumps(json_data).encode("utf-8")
+                )
+                assert r.json() == json_data
         """
         )
         assert result.returncode == 0
@@ -104,17 +131,18 @@ class TestWasi(HypercornDummyServerTestCase):
     def test_headers(self) -> None:
         result = run_python_component(
             f"""\
-            from urllib3.connection import HTTPConnection
+            from urllib3.connectionpool import HTTPConnectionPool
 
-            conn = HTTPConnection("{self.host}", {self.port})
-            conn.request(
-                "GET",
-                "/headers",
-                headers={{"foo": "bar"}}
-            )
-            response = conn.getresponse()
-            data = response.json()
-            assert data["Foo"] == "bar"
+            with HTTPConnectionPool(
+                "{self.host}",
+                {self.port},
+            ) as http_pool:
+                r = http_pool.request(
+                    "GET",
+                    "/headers",
+                    headers={{"foo": "bar"}}
+                )
+                assert r.json()["Foo"] == "bar"
         """
         )
         assert result.returncode == 0
