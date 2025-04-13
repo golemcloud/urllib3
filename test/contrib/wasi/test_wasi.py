@@ -18,7 +18,7 @@ HAS_COMMANDS = (
 class TestWasi(HypercornDummyServerTestCase):
 
     def test_simple(self) -> None:
-        result = run_python_component(
+        run_python_component(
             f"""\
             from urllib3.connectionpool import HTTPConnectionPool
             with HTTPConnectionPool(
@@ -28,12 +28,11 @@ class TestWasi(HypercornDummyServerTestCase):
                 r = http_pool.request("GET", "/")
                 assert r.status == 200, r.data
                 assert r.data == b"Dummy server!"
-        """
+            """
         )
-        assert result.returncode == 0
 
     def test_connection_import(self) -> None:
-        result = run_python_component(
+        run_python_component(
             f"""\
             from urllib3.connection import HTTPConnection
             conn = HTTPConnection("{self.host}", {self.port})
@@ -41,12 +40,11 @@ class TestWasi(HypercornDummyServerTestCase):
             r = conn.getresponse()
             assert r.status == 200, r.data
             assert r.data == b"Dummy server!"
-        """
+            """
         )
-        assert result.returncode == 0
 
     def test_connectionpool_import(self) -> None:
-        result = run_python_component(
+        run_python_component(
             f"""\
             from urllib3.connectionpool import HTTPConnection
             conn = HTTPConnection("{self.host}", {self.port})
@@ -54,12 +52,11 @@ class TestWasi(HypercornDummyServerTestCase):
             r = conn.getresponse()
             assert r.status == 200, r.data
             assert r.data == b"Dummy server!"
-        """
+            """
         )
-        assert result.returncode == 0
 
     def test_specific_method(self) -> None:
-        result = run_python_component(
+        run_python_component(
             f"""\
             from urllib3.connectionpool import HTTPConnectionPool
             with HTTPConnectionPool(
@@ -69,12 +66,11 @@ class TestWasi(HypercornDummyServerTestCase):
                 r = http_pool.request("PUT", "/specific_method?method=PUT")
                 assert r.status == 200
                 assert r.data == b""
-        """
+            """
         )
-        assert result.returncode == 0
 
     def test_chunked(self) -> None:
-        result = run_python_component(
+        run_python_component(
             f"""\
             from urllib3.connectionpool import HTTPConnectionPool
             with HTTPConnectionPool(
@@ -84,13 +80,12 @@ class TestWasi(HypercornDummyServerTestCase):
                 r = http_pool.request("GET", "/chunked")
                 assert r.status == 200
                 assert r.data == b"123123123123"
-        """
+            """
         )
-        assert result.returncode == 0
 
     @pytest.mark.skip(reason="zlib is currently unsupported in wasi")
     def test_chunked_gzip(self) -> None:
-        result = run_python_component(
+        run_python_component(
             f"""\
             from urllib3.connectionpool import HTTPConnectionPool
             with HTTPConnectionPool(
@@ -100,12 +95,11 @@ class TestWasi(HypercornDummyServerTestCase):
                 r = http_pool.request("GET", "/chunked_gzip", decode_content=True)
                 assert r.status == 200
                 assert r.data == b"123123123123"
-        """
+            """
         )
-        assert result.returncode == 0
 
     def test_echo_json(self) -> None:
-        result = run_python_component(
+        run_python_component(
             f"""\
             from urllib3.connectionpool import HTTPConnectionPool
             import json
@@ -124,12 +118,11 @@ class TestWasi(HypercornDummyServerTestCase):
                     body=json.dumps(json_data).encode("utf-8")
                 )
                 assert r.json() == json_data
-        """
+            """
         )
-        assert result.returncode == 0
 
     def test_headers(self) -> None:
-        result = run_python_component(
+        run_python_component(
             f"""\
             from urllib3.connectionpool import HTTPConnectionPool
 
@@ -143,9 +136,56 @@ class TestWasi(HypercornDummyServerTestCase):
                     headers={{"foo": "bar"}}
                 )
                 assert r.json()["Foo"] == "bar"
-        """
+            """
         )
-        assert result.returncode == 0
+
+    def test_upload(self) -> None:
+        run_python_component(
+            f"""\
+            from urllib3.connectionpool import HTTPConnectionPool
+            data = "I'm in ur multipart form-data, hazing a cheezburgr"
+            fields = {{
+                "upload_param": "filefield",
+                "upload_filename": "lolcat.txt",
+                "filefield": ("lolcat.txt", data),
+            }}
+            fields["upload_size"] = len(data)  # type: ignore[assignment]
+
+            with HTTPConnectionPool("{self.host}", {self.port}) as pool:
+                r = pool.request("POST", "/upload", fields=fields)
+                assert r.status == 200, r.data
+            """
+        )
+
+    def test_unicode_upload(self) -> None:
+        run_python_component(
+            f"""\
+            from urllib3.connectionpool import HTTPConnectionPool
+
+            fieldname = "myfile"
+            filename = "\\xe2\\x99\\xa5.txt"
+            data = "\\xe2\\x99\\xa5".encode()
+            size = len(data)
+
+            fields = {{
+                "upload_param": fieldname,
+                "upload_filename": filename,
+                fieldname: (filename, data),
+            }}
+            fields["upload_size"] = size
+
+            with HTTPConnectionPool(
+                "{self.host}",
+                {self.port},
+            ) as http_pool:
+                r = http_pool.request(
+                    "POST",
+                    "/upload",
+                    fields=fields
+                )
+                assert r.status == 200, r.data
+            """
+        )
 
 
 @pytest.mark.skipif(not HAS_COMMANDS, reason="required commands not found")
@@ -171,14 +211,13 @@ class TestWasiSocketServer(SocketDummyServerTestCase):
 
     def test_send_chunks(self) -> None:
         self.start_chunked_handler()
-        result = run_python_component(
+        run_python_component(
             f"""\
             from urllib3.connectionpool import HTTPConnectionPool
             with HTTPConnectionPool("{self.host}", {self.port}, retries=False) as pool:
                 pool.urlopen("POST", "/", body=[b"foo", b"bar", b"", b"bazzzzzzzzzzzzzzzzzzzzzz"], headers=dict(DNT="1"))
         """
         )
-        assert result.returncode == 0
         assert b"transfer-encoding" in self.buffer
         body = self.buffer.split(b"\r\n\r\n", 1)[1]
         lines = body.split(b"\r\n")

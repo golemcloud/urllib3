@@ -28,7 +28,7 @@ class Run(exports.Run):
 """
 
 
-def run_python_component(body: str) -> subprocess.CompletedProcess[bytes]:
+def run_python_component(body: str) -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         component_file = os.path.join(tmpdir, "component.py")
         wasm_file = os.path.join(tmpdir, "component.wasm")
@@ -37,22 +37,27 @@ def run_python_component(body: str) -> subprocess.CompletedProcess[bytes]:
             f.write(python_component(body))
         print(python_component(body))
 
-        args = [
-            "componentize-py",
-            "--wit-path",
-            wit_path,
-            "-w urllib-test",
-            "componentize",
-        ]
-
-        # make sure we can find urllib in the component
-        for path in sys.path:
-            args += ["-p", path]
-
-        args += ["-p", tmpdir, "-o", wasm_file, "component"]
-
         # generate wasm
-        result = subprocess.run(args)
-        assert result.returncode == 0
+        def run_componentize_py():
+            args = [
+                "componentize-py",
+                "--wit-path",
+                wit_path,
+                "-w urllib-test",
+                "componentize",
+            ]
+
+            # make sure we can find urllib in the component
+            for path in sys.path:
+                args += ["-p", path]
+
+            args += ["-p", tmpdir, "-o", wasm_file, "component"]
+
+            assert subprocess.run(args).returncode == 0
+
+        run_componentize_py()
         # run using wasmtime
-        return subprocess.run(["wasmtime", "run", "-S" "http=y", wasm_file])
+        assert (
+            subprocess.run(["wasmtime", "run", "-S" "http=y", wasm_file]).returncode
+            == 0
+        )
