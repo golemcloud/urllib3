@@ -53,7 +53,7 @@ class WasiHTTPConnection:
         *,
         timeout: _TYPE_TIMEOUT = _DEFAULT_TIMEOUT,
         source_address: tuple[str, int] | None = None,
-        blocksize: int = 8192,
+        blocksize: int = 4096,
         socket_options: _TYPE_SOCKET_OPTIONS | None = None,
         proxy: Url | None = None,
         proxy_config: ProxyConfig | None = None,
@@ -66,7 +66,7 @@ class WasiHTTPConnection:
         self._response = None
         self.proxy = None
         self.proxy_config = None
-        self.blocksize = blocksize
+        self.blocksize = max(blocksize, 4096)  # wasi-http limits blocksize to 4096
         self.source_address = None
         self.socket_options = None
         self.is_verified = False
@@ -222,9 +222,7 @@ class WasiHTTPSConnection(WasiHTTPConnection):
             port=port,
             timeout=timeout,
             source_address=source_address,
-            blocksize=max(
-                blocksize, 4096
-            ),  # wasi-http limits chunk size for writes to 4096
+            blocksize=blocksize,
             socket_options=socket_options,
             proxy=proxy,
             proxy_config=proxy_config,
