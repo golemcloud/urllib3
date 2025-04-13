@@ -293,13 +293,6 @@ def emscripten(session: nox.Session, runner: str) -> None:
 
 
 @nox.session(python="3.12")
-def wasi(session: nox.Session) -> None:
-    """Run wasi tests."""
-    session.env["UV_PROJECT_ENVIRONMENT"] = session.virtualenv.location
-    tests_impl(session, extras="", pytest_extra_args=["test/contrib/wasi"])
-
-
-@nox.session(python="3.12")
 def mypy(session: nox.Session) -> None:
     """Run mypy."""
     session.env["UV_PROJECT_ENVIRONMENT"] = session.virtualenv.location
