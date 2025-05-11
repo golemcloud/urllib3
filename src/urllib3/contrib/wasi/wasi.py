@@ -152,8 +152,9 @@ def send_request(request: WasiRequest, world_name: str) -> WasiResponse:
     outgoing_request.set_path_with_query(request.url)
 
     request_options = wasi_http_types.RequestOptions()
-    if request.timeout is not None and request.timeout != 0:
-        request_options.set_connect_timeout(int(request.timeout))
+    if request.timeout is not None and request.timeout > 0:
+        # wasi uses nanoseconds while we use seconds
+        request_options.set_connect_timeout(int(request.timeout * 1_000_000_000))
 
     with wasi_http_outgoing_handler.handle(
         outgoing_request, request_options
