@@ -114,7 +114,7 @@ def send_request(request: WasiRequest, world_name: str) -> WasiResponse:
                 wasi_http_types.IncomingBody.finish(self.resource)
                 self._closed = True
 
-    headers = wasi_http_types.Fields()
+    headers = wasi_http_types.Fields.from_list([])
 
     for k, v in request.headers.items():
         headers.append(k, v.encode())
