@@ -65,6 +65,17 @@ class TestWasi(HypercornDummyServerTestCase):
             """
         )
 
+    def test_direct(self) -> None:
+        result = run_python_component(
+            f"""\
+            from urllib3 import request
+            r = request("GET", "http://{self.host}:{self.port}")
+            assert r.status == 200, r.data
+            assert r.data == b"Dummy server!"
+        """
+        )
+        assert result.returncode == 0
+
     def test_specific_method(self) -> None:
         run_python_component(
             f"""\
